@@ -1,0 +1,5 @@
+Flask
+Redis
+numpy
+tensorflow
+keras

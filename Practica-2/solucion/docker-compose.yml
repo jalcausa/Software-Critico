@@ -1,0 +1,52 @@
+version: "3.8"
+services:
+
+  # 1. La API
+  web:
+    image: jalcausa/dsc-p2-api:latest # Usa la última versión de la imagen subida a mi Docker Hub
+    deploy:
+      replicas: 5
+      restart_policy:
+        condition: on-failure
+    ports:
+      - "4000:80"
+    environment:
+      - REDIS_HOST=redis
+    networks:
+      - webnet
+    depends_on:
+      - redis
+
+
+  # 2. Redis con TimeSeries
+  redis:
+    image: redis/redis-stack
+    ports:
+      - "6379:6379"
+    networks:
+      - webnet
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+  # 3. Grafana
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - redis
+    networks:
+      - webnet
+    environment:
+      GF_INSTALL_PLUGINS: redis-datasource
+
+networks:
+  webnet:
+    driver: overlay # overlay es necesario para Swarm
+
+volumes:
+  grafana_data: # Necesario para Grafana
+
